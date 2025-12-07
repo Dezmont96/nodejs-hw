@@ -12,26 +12,27 @@ import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
-// ----- MIDDLEWARE -----
+// middleware
 app.use(logger);
 app.use(cors());
 app.use(express.json());
 
-// ----- ROUTES -----
-app.use("/notes", notesRoutes);
+// routes
+app.use(notesRoutes);
 
-// ----- 404 -----
+// 404
 app.use(notFoundHandler);
 
-// ----- GLOBAL ERROR HANDLER -----
+// errors
 app.use(errorHandler);
 
-// ----- START SERVER -----
 const startServer = async () => {
   await connectMongoDB();
 
-  app.listen(process.env.PORT, () => {
-    console.log(`🚀 Server running on port ${process.env.PORT}`);
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
   });
 };
 
