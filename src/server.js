@@ -1,29 +1,32 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { errors } from "celebrate";
 
-import { connectMongoDB } from './db/connectMongoDB.js';
+import { connectMongoDB } from "./db/connectMongoDB.js";
+import notesRoutes from "./routes/notesRoutes.js";
 
-import notesRoutes from './routes/notesRoutes.js';
-
-import { logger } from './middleware/logger.js';
-import { notFoundHandler } from './middleware/notFoundHandler.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import { logger } from "./middleware/logger.js";
+import { notFoundHandler } from "./middleware/notFoundHandler.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
-// middleware
+// ----- MIDDLEWARE -----
 app.use(logger);
 app.use(cors());
 app.use(express.json());
 
-// routes
+// ----- ROUTES -----
 app.use(notesRoutes);
 
-// 404
+// ----- 404 HANDLER -----
 app.use(notFoundHandler);
 
-// errors
+// ----- CELEBRATE VALIDATION ERRORS -----
+app.use(errors());
+
+// ----- GLOBAL ERROR HANDLER -----
 app.use(errorHandler);
 
 const startServer = async () => {
