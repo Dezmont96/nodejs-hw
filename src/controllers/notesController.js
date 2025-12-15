@@ -1,7 +1,7 @@
 import { Note } from '../models/note.js';
 import createHttpError from 'http-errors';
 
-// GET /notes
+// GET /notes (тільки свої, пагінація + фільтрація + пошук)
 export const getAllNotes = async (req, res, next) => {
   try {
     const {
@@ -11,17 +11,29 @@ export const getAllNotes = async (req, res, next) => {
       search,
     } = req.query;
 
-    const filter = {
-      userId: req.user._id,
-    };
+    const skip = (page - 1) * perPage;
 
-    if (tag) filter.tag = tag;
-    if (search) filter.$text = { $search: search };
+    // 🔥 базовий mongoose query з чейнінгом
+    let query = Note.find()
+      .where('userId')
+      .equals(req.user._id);
 
-    const totalNotes = await Note.countDocuments(filter);
+    // 🔎 фільтрація по тегу
+    if (tag) {
+      query = query.where('tag').equals(tag);
+    }
 
-    const notes = await Note.find(filter)
-      .skip((page - 1) * perPage)
+    // 🔍 повнотекстовий пошук
+    if (search) {
+      query = query.find({ $text: { $search: search } });
+    }
+
+    // 🔢 загальна кількість нотаток
+    const totalNotes = await Note.countDocuments(query.getFilter());
+
+    // 📄 нотатки з пагінацією
+    const notes = await query
+      .skip(skip)
       .limit(Number(perPage));
 
     const totalPages = Math.ceil(totalNotes / perPage);
@@ -38,13 +50,14 @@ export const getAllNotes = async (req, res, next) => {
   }
 };
 
-// GET /notes/:noteId
+// GET /notes/:noteId (тільки свої)
 export const getNoteById = async (req, res, next) => {
   try {
-    const note = await Note.findOne({
-      _id: req.params.noteId,
-      userId: req.user._id,
-    });
+    const note = await Note.findOne()
+      .where('_id')
+      .equals(req.params.noteId)
+      .where('userId')
+      .equals(req.user._id);
 
     if (!note) {
       throw createHttpError(404, 'Note not found');
@@ -74,7 +87,10 @@ export const createNote = async (req, res, next) => {
 export const updateNote = async (req, res, next) => {
   try {
     const note = await Note.findOneAndUpdate(
-      { _id: req.params.noteId, userId: req.user._id },
+      {
+        _id: req.params.noteId,
+        userId: req.user._id,
+      },
       req.body,
       { new: true }
     );
