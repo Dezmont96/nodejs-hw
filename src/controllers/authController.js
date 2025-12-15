@@ -8,7 +8,7 @@ import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import { Session } from '../models/session.js';
 import { createSession, setSessionCookies } from '../services/auth.js';
-import { sendMail } from '../utils/sendMail.js';
+import { sendEmail } from '../utils/sendMail.js';
 
 /* =======================
    REGISTER
@@ -111,7 +111,7 @@ export const logoutUser = async (req, res, next) => {
 const TEMPLATE_PATH = path.resolve(
   'src',
   'templates',
-  'reset-password-email.html'
+  'reset-password-email.html',
 );
 
 /**
@@ -133,7 +133,7 @@ export const requestResetEmail = async (req, res, next) => {
     const token = jwt.sign(
       { sub: user._id.toString(), email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '15m' },
     );
 
     const source = await fs.readFile(TEMPLATE_PATH, 'utf-8');
@@ -146,16 +146,16 @@ export const requestResetEmail = async (req, res, next) => {
       resetLink,
     });
 
-    const result = await sendMail({
+    const result = await sendEmail({
       to: user.email,
-      subject: 'Password reset',
+      subject: 'Reset password',
       html,
     });
 
     if (!result) {
       throw createHttpError(
         500,
-        'Failed to send the email, please try again later.'
+        'Failed to send the email, please try again later.',
       );
     }
 
