@@ -6,10 +6,9 @@ import { errors } from 'celebrate';
 
 import { connectMongoDB } from './db/connectMongoDB.js';
 
-import notesRoutes from './routes/notesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import notesRoutes from './routes/notesRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-
 
 import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
@@ -17,30 +16,40 @@ import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
-// ----- MIDDLEWARE -----
+/* ================= MIDDLEWARE ================= */
+
 app.use(logger);
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
-// ----- ROUTES -----
-app.use(authRoutes);
-app.use(notesRoutes);
-app.use(userRoutes);
+/* ================= ROUTES ================= */
 
-// ----- 404 -----
+app.use(authRoutes);    // /auth/*
+app.use(notesRoutes);   // /notes/*
+app.use(userRoutes);    // /users/*
+
+/* ================= 404 ================= */
+
 app.use(notFoundHandler);
 
-// ----- CELEBRATE VALIDATION ERRORS -----
+/* ================= CELEBRATE ERRORS ================= */
+
 app.use(errors());
 
-// ----- GLOBAL ERROR HANDLER -----
+/* ================= GLOBAL ERROR HANDLER ================= */
+
 app.use(errorHandler);
 
-// ----- START SERVER -----
+/* ================= START SERVER ================= */
+
 const startServer = async () => {
   await connectMongoDB();
 

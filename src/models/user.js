@@ -29,19 +29,18 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// автоматично ставимо username = email
-userSchema.pre('save', function (next) {
-  if (!this.username) {
-    this.username = this.email;
-  }
-  next();
-});
-
-// не віддавати пароль у відповіді
+/* ===== HIDE PASSWORD IN RESPONSES ===== */
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   return obj;
 };
+
+/* ===== SET DEFAULT USERNAME ===== */
+userSchema.pre('save', function () {
+  if (!this.username) {
+    this.username = this.email;
+  }
+});
 
 export const User = mongoose.model('User', userSchema);
