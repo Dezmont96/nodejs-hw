@@ -8,6 +8,8 @@ import { connectMongoDB } from './db/connectMongoDB.js';
 
 import notesRoutes from './routes/notesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+
 
 import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
@@ -27,6 +29,7 @@ app.use(cookieParser());
 // ----- ROUTES -----
 app.use(authRoutes);
 app.use(notesRoutes);
+app.use(userRoutes);
 
 // ----- 404 -----
 app.use(notFoundHandler);
