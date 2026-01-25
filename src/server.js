@@ -1,69 +1,39 @@
-// src/server.js
-const express = require('express');
-const cors = require('cors');
-const pinoHttp = require('pino-http');
-require('dotenv').config();
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+
+import { connectMongoDB } from './db/connectMongoDB.js';
+
+import notesRoutes from './routes/notesRoutes.js';
+
+import { logger } from './middleware/logger.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
-// ----- MIDDLEWARE -----
+// middleware
+app.use(logger);
 app.use(cors());
 app.use(express.json());
 
-const logger = pinoHttp();
-app.use(logger);
+// routes
+app.use(notesRoutes);
 
-// ----- ROUTES -----
+// 404
+app.use(notFoundHandler);
 
-// GET /notes
-app.get('/notes', (req, res) => {
-  res.status(200).json({
-    message: 'Retrieved all notes',
+// errors
+app.use(errorHandler);
+
+const startServer = async () => {
+  await connectMongoDB();
+
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
   });
-});
+};
 
-// GET /notes/:noteId
-app.get('/notes/:noteId', (req, res) => {
-  const { noteId } = req.params;
-
-  res.status(200).json({
-    message: `Retrieved note with ID: ${noteId}`,
-  });
-});
-
-// GET /test-error
-app.get('/test-error', () => {
-  throw new Error('Simulated server error');
-});
-
-// ----- 404 MIDDLEWARE -----
-app.use((req, res) => {
-  res.status(404).json({
-    message: 'Route not found',
-  });
-});
-
-// ----- ERROR HANDLER (500) -----
-/* eslint-disable no-unused-vars */
-app.use((err, req, res, next) => {
-  // Лог помилки через pino
-  if (req.log) {
-    req.log.error({ err }, 'Unhandled error');
-  } else {
-    // На випадок, якщо з якоїсь причини логера немає
-    console.error(err);
-  }
-
-  res.status(500).json({
-    message: err.message || 'Internal server error',
-  });
-});
-/* eslint-enable no-unused-vars */
-
-// ----- SERVER START -----
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  // Цей лог побачиш у консолі Render та локально
-  console.log(`Server is running on port ${PORT}`);
-});
+startServer();
